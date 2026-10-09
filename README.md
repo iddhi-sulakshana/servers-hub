@@ -1,4 +1,4 @@
-# mcp-on-demand
+# servers-hub
 
 One MCP server that starts other stdio MCP servers **on demand**. Nothing in
 `servers.json` is launched at Claude Code startup; a server starts the first time
@@ -8,7 +8,7 @@ one of its tools is requested and stays up for the rest of the session.
 
     bun install
     cp servers.example.json servers.json && chmod 600 servers.json
-    claude mcp add -s user mcp-on-demand -- bun /path/to/mcp-on-demand/src/index.ts
+    claude mcp add -s user servers-hub -- bun /path/to/servers-hub/src/index.ts
 
 ## Tools
 
@@ -22,5 +22,5 @@ one of its tools is requested and stays up for the rest of the session.
 
 `servers.json` (gitignored, `chmod 600`, holds credentials), same shape as
 `servers.example.json`. It is re-read on each lookup, so edits apply without a
-restart. Override the path with `MCP_ON_DEMAND_CONFIG`, and the server start
-timeout (default 120000 ms) with `MCP_ON_DEMAND_CONNECT_TIMEOUT_MS`.
+restart. Override the path with `SERVERS_HUB_CONFIG`, and the server start
+timeout (default 120000 ms) with `SERVERS_HUB_CONNECT_TIMEOUT_MS`.

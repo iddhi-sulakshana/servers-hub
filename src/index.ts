@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// mcp-on-demand: a single MCP server that starts other (stdio) MCP servers lazily,
+// servers-hub: a single MCP server that starts other (stdio) MCP servers lazily,
 // only when a tool on them is first requested, and proxies calls to them.
 
 import { readFileSync } from "node:fs";
@@ -23,10 +23,10 @@ type ServerConfig = {
 };
 
 const CONFIG_PATH =
-  process.env.MCP_ON_DEMAND_CONFIG ?? join(dirname(import.meta.dir), "servers.json");
-const CONNECT_TIMEOUT_MS = Number(process.env.MCP_ON_DEMAND_CONNECT_TIMEOUT_MS ?? 120_000);
+  process.env.SERVERS_HUB_CONFIG ?? join(dirname(import.meta.dir), "servers.json");
+const CONNECT_TIMEOUT_MS = Number(process.env.SERVERS_HUB_CONNECT_TIMEOUT_MS ?? 120_000);
 
-// Re-read on every lookup so edits to servers.json apply without restarting the gateway.
+// Re-read on every lookup so edits to servers.json apply without restarting the hub.
 function loadConfig(): Record<string, ServerConfig> {
   return JSON.parse(readFileSync(CONFIG_PATH, "utf8")).servers ?? {};
 }
@@ -54,7 +54,7 @@ function connect(name: string): Promise<Client> {
       cwd: cfg.cwd,
       stderr: "inherit",
     });
-    const client = new Client({ name: `mcp-on-demand/${name}`, version: "1.0.0" });
+    const client = new Client({ name: `servers-hub/${name}`, version: "1.0.0" });
     client.onclose = () => clients.delete(name);
 
     let timer: Timer | undefined;
@@ -94,8 +94,8 @@ const serverArg = {
   server: { type: "string", description: "Server name from list_servers" },
 } as const;
 
-const gateway = new Server(
-  { name: "mcp-on-demand", version: "1.0.0" },
+const hub = new Server(
+  { name: "servers-hub", version: "1.0.0" },
   {
     capabilities: { tools: {} },
     instructions:
@@ -105,12 +105,12 @@ const gateway = new Server(
   },
 );
 
-gateway.setRequestHandler(ListToolsRequestSchema, async () => ({
+hub.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "list_servers",
       description:
-        "List the MCP servers available through the gateway and whether each is running. Starts nothing.",
+        "List the MCP servers available through the hub and whether each is running. Starts nothing.",
       inputSchema: { type: "object", properties: {} },
     },
     {
@@ -148,13 +148,13 @@ gateway.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "stop_server",
-      description: "Stop a running server started through the gateway.",
+      description: "Stop a running server started through the hub.",
       inputSchema: { type: "object", properties: serverArg, required: ["server"] },
     },
   ],
 }));
 
-gateway.setRequestHandler(CallToolRequestSchema, async (req): Promise<CallToolResult> => {
+hub.setRequestHandler(CallToolRequestSchema, async (req): Promise<CallToolResult> => {
   const args = (req.params.arguments ?? {}) as Record<string, any>;
   try {
     switch (req.params.name) {
@@ -213,4 +213,4 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 process.stdin.on("close", shutdown);
 
-await gateway.connect(new StdioServerTransport());
+await hub.connect(new StdioServerTransport());

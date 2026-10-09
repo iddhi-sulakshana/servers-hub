@@ -1,5 +1,5 @@
 {
-  "name": "mcp-on-demand",
+  "name": "servers-hub",
   "module": "src/index.ts",
   "type": "module",
   "private": true,
