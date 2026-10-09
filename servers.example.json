@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "ssh-mcp-example": {
+      "description": "Optional note shown by list_servers",
+      "command": "bunx",
+      "args": ["-y", "ssh-mcp", "--host=1.2.3.4", "--port=22", "--user=root", "--timeout=30000", "--disableApproval"],
+      "env": { "SSH_MCP_PASSWORD": "..." }
+    },
+    "dokploy-example-mcp": {
+      "command": "bunx",
+      "args": ["-y", "@dokploy/mcp"],
+      "env": { "DOKPLOY_URL": "http://1.2.3.4:3000", "DOKPLOY_API_KEY": "..." }
+    }
+  }
+}
